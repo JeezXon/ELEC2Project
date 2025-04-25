@@ -1,5 +1,5 @@
 import { useState, useEffect, useReducer } from "react";
-import { FaShoppingCart, FaPlus, FaMinus } from "react-icons/fa";
+import { FaShoppingCart, FaPlus, FaMinus, FaTimes } from "react-icons/fa";
 import logo from './assets/shoe_logo.png'; // Adjust path if needed
 import './getData.css';
 
@@ -41,6 +41,7 @@ export const GetData = ({ title, fetchData }) => {
     const [cart, dispatch] = useReducer(cartReducer, []);
     const [showCart, setShowCart] = useState(false);
     const [hoveredCard, setHoveredCard] = useState(null);
+    const [selectedProduct, setSelectedProduct] = useState(null);
     
 
     useEffect(() => {
@@ -50,22 +51,29 @@ export const GetData = ({ title, fetchData }) => {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+    const openProductModal = (product) => {
+      setSelectedProduct(product);
+    };
+
+    const closeProductModal = () => {
+      setSelectedProduct(null);
+    };
+
     return (
-        
         <div className="data-container">
             <div className="cart-header">
                 {/* Logo on the left */}
                 <div className="logo-container">
                 <img src={logo} alt="NXTSTEP Logo" className="logo" />
                 </div>
-  <h2 className="section-title">{title}</h2>
+                <h2 className="section-title">{title}</h2>
 
-  {/* Cart icon on the right */}
-  <div className="cart-icon" onClick={() => setShowCart(!showCart)}>
-    <FaShoppingCart />
-    {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
-  </div>
-</div>
+                {/* Cart icon on the right */}
+                <div className="cart-icon" onClick={() => setShowCart(!showCart)}>
+                    <FaShoppingCart />
+                    {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
+                </div>
+            </div>
 
             {showCart && (
                 <div className="cart-summary">
@@ -108,6 +116,33 @@ export const GetData = ({ title, fetchData }) => {
                 </div>
             )}
 
+            {/* Product Detail Modal */}
+            {selectedProduct && (
+                <div className="product-modal">
+                    <div className="modal-content">
+                        <button className="close-modal" onClick={closeProductModal}>
+                            <FaTimes />
+                        </button>
+                        <img src={selectedProduct.img_des} alt={selectedProduct.shoes_name} className="modal-image" />
+                        <div className="modal-description">
+                            <h3>{selectedProduct.shoes_name}</h3>
+                            <p>{selectedProduct.short_origin}</p>
+                            <div className="modal-footer">
+                                <button 
+                                    className="add-to-cart"
+                                    onClick={() => {
+                                        dispatch({ type: 'ADD_ITEM', payload: selectedProduct });
+                                        closeProductModal();
+                                    }}
+                                >
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="cards-grid">
                 {posts.map((post) => (
                     <div 
@@ -116,25 +151,31 @@ export const GetData = ({ title, fetchData }) => {
                         onMouseEnter={() => setHoveredCard(post.id)}
                         onMouseLeave={() => setHoveredCard(null)}
                     >
-                        <img src={post.avatar} alt={post.shoes_name} />
+                        <img 
+                            src={post.avatar} 
+                            alt={post.shoes_name} 
+                            onClick={() => openProductModal(post)}
+                            className="product-image"
+                        />
                         <div className="card-content">
                             <div className="name-price-container">
                                 <h2 className="shoe-name">{post.shoes_name}</h2>
                                 <p className="description">{post.description}</p>
                             </div>
                                 
-                                <span className="price">${post.price}</span>
+                            <span className="price">${post.price}</span>
                             {hoveredCard === post.id && (
-                            <button 
-                            className="add-to-cart"
-                            onClick={() => dispatch({ type: 'ADD_ITEM', payload: post })}
-                            >Add to Cart</button>
+                                <button 
+                                    className="add-to-cart"
+                                    onClick={() => dispatch({ type: 'ADD_ITEM', payload: post })}
+                                >
+                                    Add to Cart
+                                </button>
                             )}
                         </div>
                     </div>
                 ))}
             </div>
         </div>
-        
     );
 };
